@@ -24,58 +24,112 @@ namespace PlayerNotifier
     /// </summary>
     public partial class MainWindow : Window
     {
+        const string URL = "https://www.playsport.cc/livescore.php?aid=2";
+        List<string> outerGameboxIdList = new List<string>();
+
+        string selectedGamebox = "";
         Timer timer = new Timer();
-        string url = "https://www.playsport.cc/livescore.php?aid=2";
-        string player = "";
-        string playerPrev = "";
+        string player1 = "";
+        string player2 = "";
+
 
         public MainWindow()
         {
             InitializeComponent();
-            timer.Interval = 15 * 1000;
+
             timer.Elapsed += Timer_Elapsed;
             timer.AutoReset = true;
         }
 
-        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        private async void SearchGameButton_Click(object sender, RoutedEventArgs e)
         {
-            //MessageBox.Show("times up");
-            HtmlWeb web = new HtmlWeb();
-            web.UsingCache = false;
-            HtmlDocument doc = web.Load(url);
+            Log("正在從網頁取得資訊: " + URL);
+            await Task.Delay(5);
+
+            HtmlWeb htmlWeb = new HtmlWeb();
+            HtmlDocument htmlDocument = htmlWeb.Load(URL);
             try
             {
-                HtmlNode node = doc.DocumentNode.SelectSingleNode("//*[@id='outer-gamebox-1738699']");
-                node = node.SelectSingleNode("descendant::*[@class='inplay-tr']");
-                Console.WriteLine(node.InnerHtml);
-                if (!string.IsNullOrEmpty(player) && node.InnerHtml.Contains(player))
+                List<string> vsList = new List<string>();
+
+                foreach (HtmlNode outerGamebox in
+                    htmlDocument.DocumentNode.SelectNodes("//*[@class='outer-gamebox']"))
                 {
-                    this.Dispatcher.InvokeAsync(() => Notify(player));
+                    string gameboxId = outerGamebox.Id.Replace("outer-", string.Empty);
+
+                    HtmlNode gamebox = outerGamebox.SelectSingleNode(
+                        string.Format("descendant::*[@id='{0}']", gameboxId));
+
+                    string awayTeam = gamebox.GetAttributeValue("data-namea", "錯誤");
+                    string homeTeam = gamebox.GetAttributeValue("data-nameh", "錯誤");
+
+                    if (!gamebox.InnerHtml.Contains("比賽結束"))
+                    {
+                        Log(awayTeam + " VS " + homeTeam);
+                        vsList.Add(awayTeam + " VS " + homeTeam);
+
+                        outerGameboxIdList.Add(outerGamebox.Id);
+                    }
                 }
-                else if (!string.IsNullOrEmpty(playerPrev) && node.InnerHtml.Contains(playerPrev))
-                {
-                    this.Dispatcher.InvokeAsync(() => Notify(playerPrev));
-                }
+                SelectGameComboBox.ItemsSource = vsList;
             }
             catch
             {
-                Console.WriteLine("parse fail");
+                MessageBox.Show("對不起這個應用程式掛掉了QQ");
+                Close();
             }
-}
+        }
 
-        private void button_Click(object sender, RoutedEventArgs e)
+        private void SelectGameComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (button.Content.ToString() == "Start")
+            selectedGamebox = outerGameboxIdList[SelectGameComboBox.SelectedIndex];
+            Log("選擇: " + SelectGameComboBox.SelectedItem);
+        }
+
+        private void NotifyButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (notifyButton.Content.ToString() == "開啟提醒")
             {
-                player = textBox.Text;
-                playerPrev = textBoxPrev.Text;
+                player1 = player1textBox.Text;
+                player2 = player2textBox.Text;
+                timer.Interval = intervalSlider.Value * 1000;
                 timer.Enabled = true;
-                button.Content = "Stop";
+                notifyButton.Content = "關閉提醒";
+                Log("已開啟提醒: " + player1 + " & " + player2);
             }
             else
             {
                 timer.Enabled = false;
-                button.Content = "Start";
+                notifyButton.Content = "開啟提醒";
+                Log("已關閉提醒");
+            }
+        }
+
+        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            HtmlWeb htmlWeb = new HtmlWeb();
+            HtmlDocument htmlDocument = htmlWeb.Load(URL);
+            try
+            {
+                HtmlNode gameBox = htmlDocument.DocumentNode.SelectSingleNode(
+                    string.Format("//*[@id='{0}']", selectedGamebox));
+
+                HtmlNode inplay = gameBox.SelectSingleNode("descendant::*[@class='inplay-tr']");
+                Console.WriteLine(inplay.InnerHtml);
+
+                if (!string.IsNullOrEmpty(player1) && (inplay.InnerHtml.Contains(player1)))
+                {
+                    this.Dispatcher.InvokeAsync(() => Notify(player1));
+                }
+                else if (!string.IsNullOrEmpty(player2) && (inplay.InnerHtml.Contains(player2)))
+                {
+                    this.Dispatcher.InvokeAsync(() => Notify(player2));
+                }
+            }
+            catch
+            {
+                MessageBox.Show("對不起這個應用程式掛掉了QQ");
+                Close();
             }
         }
 
@@ -84,8 +138,13 @@ namespace PlayerNotifier
             this.Focus();
             this.Topmost = true;
             SystemSounds.Beep.Play();
-            MessageBox.Show(player + " At Bat");
+            MessageBox.Show(player + " 上場");
             this.Topmost = false;
+        }
+
+        private void Log(string line)
+        {
+            logTextBlock.Text += line + Environment.NewLine;
         }
     }
 }

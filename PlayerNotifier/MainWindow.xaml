@@ -5,11 +5,40 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PlayerNotifier"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
-    <Grid>
-        <Button x:Name="button" Content="Start" HorizontalAlignment="Left" Margin="114,112,0,0" VerticalAlignment="Top" Width="75" Click="button_Click"/>
-        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="23" Margin="126,68,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
-        <TextBox x:Name="textBoxPrev" HorizontalAlignment="Left" Height="23" Margin="126,40,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+        Title="MainWindow" Height="350" Width="525" Background="#FFF0F0F0">
+	<Grid Margin="10">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="Auto"/>
+			<ColumnDefinition Width="Auto"/>
+			<ColumnDefinition/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition/>
+			<RowDefinition/>
+			<RowDefinition/>
+			<RowDefinition/>
+			<RowDefinition/>
+			<RowDefinition/>
+		</Grid.RowDefinitions>
 
-    </Grid>
+		<Button x:Name="searchGameButton" Content="尋找比賽" HorizontalAlignment="Center" VerticalAlignment="Center" Click="SearchGameButton_Click" Height="19" Grid.Column="1" Width="76"/>
+
+		<Label x:Name="label" Content="選擇比賽" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Row="1" Height="25" Margin="5,12.6,5,12.8" Width="58"/>
+		<ComboBox x:Name="SelectGameComboBox" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" SelectionChanged="SelectGameComboBox_SelectionChanged" Grid.Row="1" Grid.Column="1" Height="21" Margin="5,0"/>
+
+		<Label x:Name="label1" Content="選手1" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Row="2" Height="25" Margin="5,12.2,5,12.4" Width="42"/>
+		<TextBox x:Name="player1textBox" HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" VerticalAlignment="Center" Width="120" Grid.Row="2" Grid.Column="1" Margin="5,0"/>
+
+		<Label x:Name="label2" Content="選手2" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Row="3" Height="25" Margin="5,12.6,5,12.8" Width="42"/>
+		<TextBox x:Name="player2textBox" HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" VerticalAlignment="Center" Width="120" Grid.Row="3" Grid.Column="1" Margin="5,0"/>
+
+		<Label x:Name="label3" Content="更新間隔" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Row="4" Height="25" Margin="5,12.2,5,12.4" Width="58"/>
+		<Slider x:Name="intervalSlider" HorizontalAlignment="Left" VerticalAlignment="Center" Minimum="10" Maximum="60" Width="120" TickFrequency="5" SmallChange="5" TickPlacement="BottomRight" LargeChange="5" IsSnapToTickEnabled="True" AutoToolTipPlacement="TopLeft" Value="15" Grid.Row="4" Grid.Column="1" Height="24" Margin="5,0"/>
+
+		<Button x:Name="notifyButton" Content="開啟提醒" HorizontalAlignment="Center" VerticalAlignment="Center" Width="76" Click="NotifyButton_Click" Grid.Row="5" Height="19" Grid.Column="1"/>
+
+		<Border BorderBrush="Black" BorderThickness="1" Margin="5" Grid.Column="2" Grid.RowSpan="6">
+			<TextBlock x:Name="logTextBlock" TextWrapping="Wrap" Text="" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="5"/>
+		</Border>
+	</Grid>
 </Window>
