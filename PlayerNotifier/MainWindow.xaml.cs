@@ -27,21 +27,30 @@ namespace PlayerNotifier
         const string URL = "https://www.playsport.cc/livescore.php?aid=2";
         List<string> outerGameboxIdList = new List<string>();
 
-        string selectedGamebox = "";
-        Timer timer = new Timer();
-        string player1 = "";
-        string player2 = "";
+        string selectedGameboxA = "";
+        string selectedGameboxB = "";
+        Timer timerA = new Timer();
+        Timer timerB = new Timer();
+        string playerA1 = "";
+        string playerA2 = "";
+        string playerB1 = "";
+        string playerB2 = "";
 
 
         public MainWindow()
         {
             InitializeComponent();
 
-            timer.Elapsed += Timer_Elapsed;
-            timer.AutoReset = true;
+            SearchGame();
+
+            timerA.Elapsed += TimerA_Elapsed;
+            timerA.AutoReset = true;
+
+            timerB.Elapsed += TimerB_Elapsed;
+            timerB.AutoReset = true;
         }
 
-        private async void SearchGameButton_Click(object sender, RoutedEventArgs e)
+        private async void SearchGame()
         {
             Log("正在從網頁取得資訊: " + URL);
             await Task.Delay(5);
@@ -71,7 +80,8 @@ namespace PlayerNotifier
                         outerGameboxIdList.Add(outerGamebox.Id);
                     }
                 }
-                SelectGameComboBox.ItemsSource = vsList;
+                SelectGameComboBoxA.ItemsSource = vsList;
+                SelectGameComboBoxB.ItemsSource = vsList;
             }
             catch
             {
@@ -82,48 +92,131 @@ namespace PlayerNotifier
 
         private void SelectGameComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            selectedGamebox = outerGameboxIdList[SelectGameComboBox.SelectedIndex];
-            Log("選擇: " + SelectGameComboBox.SelectedItem);
+            if ((ComboBox)sender == SelectGameComboBoxA)
+            {
+                selectedGameboxA = outerGameboxIdList[SelectGameComboBoxA.SelectedIndex];
+                Log("選擇: " + SelectGameComboBoxA.SelectedItem);
+            }
+            else // (ComboBox)sender == SelectGameComboBoxB
+            {
+                selectedGameboxB = outerGameboxIdList[SelectGameComboBoxB.SelectedIndex];
+                Log("選擇: " + SelectGameComboBoxB.SelectedItem);
+            }
         }
 
         private void NotifyButton_Click(object sender, RoutedEventArgs e)
         {
-            if (notifyButton.Content.ToString() == "開啟提醒")
+            if ((Button)sender == notifyButtonA)
             {
-                player1 = player1textBox.Text;
-                player2 = player2textBox.Text;
-                timer.Interval = intervalSlider.Value * 1000;
-                timer.Enabled = true;
-                notifyButton.Content = "關閉提醒";
-                Log("已開啟提醒: " + player1 + " & " + player2);
+                if (notifyButtonA.Content.ToString() == "開啟提醒")
+                {
+                    playerA1 = playerA1textBox.Text;
+                    playerA2 = playerA2textBox.Text;
+                    timerA.Interval = intervalSlider.Value * 1000;
+                    timerA.Enabled = true;
+                    notifyButtonA.Content = "關閉提醒";
+                    Log("已開啟提醒: " + playerA1 + " & " + playerA2);
+                }
+                else
+                {
+                    timerA.Enabled = false;
+                    notifyButtonA.Content = "開啟提醒";
+                    Log("已關閉提醒");
+                }
             }
-            else
+            else // (Button)sender == notifyButtonB
             {
-                timer.Enabled = false;
-                notifyButton.Content = "開啟提醒";
-                Log("已關閉提醒");
+                if (notifyButtonB.Content.ToString() == "開啟提醒")
+                {
+                    playerB1 = playerB1textBox.Text;
+                    playerB2 = playerB2textBox.Text;
+                    timerB.Interval = intervalSlider.Value * 1000;
+                    timerB.Enabled = true;
+                    notifyButtonB.Content = "關閉提醒";
+                    Log("已開啟提醒: " + playerB1 + " & " + playerB2);
+                }
+                else
+                {
+                    timerB.Enabled = false;
+                    notifyButtonB.Content = "開啟提醒";
+                    Log("已關閉提醒");
+                }
             }
+
         }
 
-        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        private void TimerA_Elapsed(object sender, ElapsedEventArgs e)
         {
             HtmlWeb htmlWeb = new HtmlWeb();
             HtmlDocument htmlDocument = htmlWeb.Load(URL);
             try
             {
                 HtmlNode gameBox = htmlDocument.DocumentNode.SelectSingleNode(
-                    string.Format("//*[@id='{0}']", selectedGamebox));
+                    string.Format("//*[@id='{0}']", selectedGameboxA));
 
                 HtmlNode inplay = gameBox.SelectSingleNode("descendant::*[@class='inplay-tr']");
                 Console.WriteLine(inplay.InnerHtml);
 
-                if (!string.IsNullOrEmpty(player1) && (inplay.InnerHtml.Contains(player1)))
+                if (!string.IsNullOrEmpty(playerA1) && (inplay.InnerHtml.Contains(playerA1)))
                 {
-                    this.Dispatcher.InvokeAsync(() => Notify(player1));
+                    this.Dispatcher.InvokeAsync(() =>
+                    {
+                        timerA.Enabled = false;
+                        notifyButtonA.Content = "開啟提醒";
+                        Log("已關閉提醒");
+                        Notify(playerA1);
+                    });
                 }
-                else if (!string.IsNullOrEmpty(player2) && (inplay.InnerHtml.Contains(player2)))
+                else if (!string.IsNullOrEmpty(playerA2) && (inplay.InnerHtml.Contains(playerA2)))
                 {
-                    this.Dispatcher.InvokeAsync(() => Notify(player2));
+                    this.Dispatcher.InvokeAsync(() =>
+                    {
+                        timerA.Enabled = false;
+                        notifyButtonA.Content = "開啟提醒";
+                        Log("已關閉提醒");
+                        Notify(playerA2);
+                    });
+                }
+            }
+            catch
+            {
+                MessageBox.Show("對不起這個應用程式掛掉了QQ");
+                Close();
+            }
+        }
+
+        private void TimerB_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            HtmlWeb htmlWeb = new HtmlWeb();
+            HtmlDocument htmlDocument = htmlWeb.Load(URL);
+            try
+            {
+                HtmlNode gameBox = htmlDocument.DocumentNode.SelectSingleNode(
+                    string.Format("//*[@id='{0}']", selectedGameboxB));
+
+                HtmlNode inplay = gameBox.SelectSingleNode("descendant::*[@class='inplay-tr']");
+                Console.WriteLine(inplay.InnerHtml);
+
+                if (!string.IsNullOrEmpty(playerB1) && (inplay.InnerHtml.Contains(playerB1)))
+                {
+                    this.Dispatcher.InvokeAsync(() =>
+                    {
+                        timerB.Enabled = false;
+                        notifyButtonB.Content = "開啟提醒";
+                        Log("已關閉提醒");
+                        Notify(playerB1);
+                    });
+
+                }
+                else if (!string.IsNullOrEmpty(playerA2) && (inplay.InnerHtml.Contains(playerB2)))
+                {
+                    this.Dispatcher.InvokeAsync(() =>
+                    {
+                        timerB.Enabled = false;
+                        notifyButtonB.Content = "開啟提醒";
+                        Log("已關閉提醒");
+                        Notify(playerB1);
+                    });
                 }
             }
             catch
